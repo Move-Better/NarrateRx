@@ -187,8 +187,8 @@ export default async function handler(req, res) {
   return res.status(200).json({
     systemPrompt,
     messages,
-    model: 'claude-opus-4-7',
-    maxOutputTokens: 4096,
+    model: 'claude-opus-5',
+    maxOutputTokens: 12_000,
     effectiveLengthPreset,
     effectiveStyle,
   })

@@ -18,7 +18,7 @@ import { generateText } from 'ai'
 
 
 import { supabaseRest } from './supabaseRest.js'
-const MODEL = 'anthropic/claude-opus-4-7'
+const MODEL = 'anthropic/claude-opus-5'
 
 // Conservative input cap. Opus accepts ~200K tokens; we leave headroom for
 // the system prompt + brand voice + structured output instruction overhead.
@@ -26,8 +26,18 @@ const MODEL = 'anthropic/claude-opus-4-7'
 const MAX_SOURCE_CHARS = 600_000
 
 // Output cap. A medium book of 8 chapters × 800 words ≈ 8K tokens; we
-// allow up to 16K to absorb tone work and long-quote inclusion.
-const MAX_OUTPUT_TOKENS = 16_000
+// allow up to 16K to absorb tone work and long-quote inclusion. Bumped to
+// 24K (2026-09-06, model swap to Opus 5): measured on real prod transcripts
+// that Opus 5 uses ~1.7-2x the output tokens per character that Opus 4.7
+// did for equivalent blog/series content — so the same 8-chapter book that
+// used to fit in ~8K tokens could now need close to 16K, leaving no
+// headroom under the old 16K cap. This value is NOT independently
+// end-to-end verified against a real book synthesis run (that needs a
+// full multi-interview workspace and a multi-minute, non-trivial-cost
+// call) — it's extrapolated from the blog/series measurements. If a real
+// book synthesis run comes back with finishReason 'length', raise this
+// further rather than assuming the manuscript is just short.
+const MAX_OUTPUT_TOKENS = 24_000
 
 const sb = (path, init = {}) => supabaseRest(path, init, { contentType: 'application/json' })
 

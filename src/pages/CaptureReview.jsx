@@ -145,8 +145,8 @@ export default function CaptureReview() {
 
       let accumulated = ''
       for await (const delta of streamMessage(streamMessages, systemPrompt, {
-        model: 'claude-opus-4-7',
-        maxOutputTokens: 4096,
+        model: 'claude-opus-5',
+        maxOutputTokens: 12_000,
       })) {
         accumulated += delta
         setStreamingText(accumulated)

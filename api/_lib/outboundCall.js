@@ -31,7 +31,7 @@ import { mondayOf } from './strategist.js'
 
 // Matches the model InterviewSession.jsx uses for blog generation, so the
 // phone-call draft is the same quality as an in-app interview draft.
-const BLOG_MODEL = 'anthropic/claude-opus-4-7'
+const BLOG_MODEL = 'anthropic/claude-opus-5'
 
 /**
  * Read the pieces Bernard has already published for this workspace THIS WEEK,

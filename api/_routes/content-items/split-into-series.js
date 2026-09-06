@@ -277,13 +277,18 @@ export default async function handler(req, res) {
     )
     const transcriptMessages = turns.map((m) => ({ role: m.role, content: m.content }))
     const { text: clusterRaw } = await generateText({
-      model: 'anthropic/claude-opus-4-7',
+      model: 'anthropic/claude-opus-5',
       instructions: clusterSystem,
       messages: [
         ...transcriptMessages,
         { role: 'user', content: `Please return the ${partCount}-part series plan as JSON now.` },
       ],
-      maxOutputTokens: 2000,
+      // Bumped from 2000 (2026-09-06): Opus 5 uses more output tokens per
+      // character than Opus 4.7 for the same plan and was hitting
+      // finishReason 'length' at 2000 (a real 3-part plan needed ~2564
+      // tokens to finish with 'stop') — silently truncated JSON that then
+      // fails to parse. 6000 leaves headroom for the max 4-part case.
+      maxOutputTokens: 6000,
     })
     const plan = extractJsonPlan(clusterRaw)
     if (!plan || !Array.isArray(plan.parts) || plan.parts.length === 0) {
@@ -310,7 +315,7 @@ export default async function handler(req, res) {
 
     // ── PASS 2: write each part ───────────────────────────────────────────
     // Run sequentially rather than in parallel — each part's generation is
-    // ~30s with Opus 4.7, and parallel calls would risk hitting per-workspace
+    // ~30s per part with Opus, and parallel calls would risk hitting per-workspace
     // AI rate limits and inflate worst-case memory. Total runtime budget is
     // bounded by maxDuration=300s; 4 × 60s = 240s leaves headroom.
     const writtenParts = []
@@ -337,7 +342,7 @@ export default async function handler(req, res) {
       ) + buildVerbatimBlock(interview.verbatim_flags)
 
       const { text } = await generateText({
-        model: 'anthropic/claude-opus-4-7',
+        model: 'anthropic/claude-opus-5',
         instructions: partSystem,
         messages: [
           ...transcriptMessages,
