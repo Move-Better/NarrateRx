@@ -47,7 +47,7 @@ async function handler(req, res) {
 
   // Allowlisted models only — prevents a workspace member from invoking a
   // more expensive tier (e.g. Opus) at the billing account's cost.
-  const ALLOWED_MODELS = new Set(['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'])
+  const ALLOWED_MODELS = new Set(['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7', 'claude-opus-5'])
   const requested = model || 'claude-sonnet-4-6'
   if (requested.includes('/') && !requested.startsWith('anthropic/')) {
     return res.status(400).json({ error: 'model_not_allowed' })
@@ -60,9 +60,14 @@ async function handler(req, res) {
   const gatewayModel = requested.includes('/') ? requested : `anthropic/${requested}`
 
   // Default keeps short interview turns cheap; blog/long-form callers pass
-  // a higher cap. Clamp to 8192 so a malicious caller can't burn the budget.
+  // a higher cap. Clamp to 16000 so a malicious caller can't burn the
+  // budget — bumped from 8192 (2026-09-06) because Opus 5 uses ~1.7-2x the
+  // output tokens per character that Opus 4.7 did for the same blog-length
+  // content, so a full post now needs more headroom to finish with
+  // finishReason 'stop' instead of silently truncating at 'length'. Matches
+  // the ceiling bookSynthesis.js already uses for its own long-form calls.
   const cap = Number.isFinite(maxOutputTokens)
-    ? Math.min(Math.max(parseInt(maxOutputTokens, 10) || 1024, 256), 8192)
+    ? Math.min(Math.max(parseInt(maxOutputTokens, 10) || 1024, 256), 16_000)
     : 1024
 
   let result

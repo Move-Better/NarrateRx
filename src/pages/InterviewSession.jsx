@@ -1453,7 +1453,7 @@ export default function InterviewSession() {
         },
       ]
 
-      for await (const delta of streamMessage(streamMessages, systemPrompt, { model: 'claude-opus-4-7', maxOutputTokens: 4096 })) {
+      for await (const delta of streamMessage(streamMessages, systemPrompt, { model: 'claude-opus-5', maxOutputTokens: 12_000 })) {
         blogStreamingTextRef.current += delta
       }
 
